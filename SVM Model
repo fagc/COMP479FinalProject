@@ -45,7 +45,8 @@ target = data['Response']
 features = pd.get_dummies(features, drop_first=True)
 
 # split the data into training and testing sets
-x_train, x_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+# stratifying to maintain the class distribution
+x_train, x_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42, stratify=target)
 
 # scaling the features
 scaler = StandardScaler()
