@@ -1,0 +1,69 @@
+# %%
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+#loading our dataset
+df = pd.read_csv("/Users/zohahassan/Documents/COMP-479-ML/ML_Project/marketing_campaign.csv", delimiter="\t")
+
+#drop rows with missing values
+df.dropna(inplace=True)
+
+#convert birth year to age
+df['Age'] = 2024 - df['Year_Birth']
+#total number of kids
+df['Kids'] = df['Kidhome'] + df['Teenhome']
+#Calculating enrollment year data
+df['EnrollmentYear'] = pd.to_datetime(df['Dt_Customer'], dayfirst=True).dt.year
+#Calculating Tenure date
+df['Tenure'] = 2024 - df['EnrollmentYear']
+
+#categorical attributes into numerical ones
+df = pd.get_dummies(df, columns=['Marital_Status', 'Education'], drop_first=True)
+
+#dropping unneccessary columns
+df.drop(columns=['ID', 'Dt_Customer', 'Year_Birth', 'Kidhome', 'Teenhome'], inplace=True)
+
+#standardizing
+stsdc = StandardScaler()
+columns_to_scale = ['Income', 'Age', 'MntWines', 'MntMeatProducts', 'MntFruits', 'MntFishProducts', 'MntSweetProducts', 'MntGoldProds', 'NumDealsPurchases', 'NumWebPurchases', 'NumCatalogPurchases', 'NumStorePurchases', 'NumWebVisitsMonth']
+df[columns_to_scale] = stsdc.fit_transform(df[columns_to_scale])
+
+print(df.columns)
+
+#Splitting df into training, development, and testing sets
+X = df.drop(columns=['Response']).values
+y = df['Response'].values
+
+#Training 70%, Development 15%, Testing 15%
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.30, random_state=0, stratify=y, shuffle=True)
+X_dev, X_test, y_dev, y_test = train_test_split(X_temp, y_temp, test_size=0.50, random_state=0, stratify=y_temp, shuffle=True)
+
+#Creating an instance of the Logistic Regression Model, test hyperparameters
+lr = LogisticRegression(C=10)
+
+#Applying logistic regression classifier to the training set
+lr.fit(X_train, y_train)
+
+#Evaluate lr classifier on the development set
+y_dev_pred = lr.predict(X_dev)
+
+#Calculate the accuracy, classification report for the development set
+dev_accuracy = accuracy_score(y_dev, y_dev_pred)
+print(f"Development set accuracy: {dev_accuracy:.2f}")
+print("Classification Report (Development Set):")
+print(classification_report(y_dev, y_dev_pred))
+
+#Evaluate the lr classifier on the test set
+y_test_pred = lr.predict(X_test)
+
+#Calculate the accuracy, classification report for the test set
+accuracy = accuracy_score(y_test, y_test_pred)
+print(f"Accuracy: {accuracy:.2f}")
+print("Classification Report:")
+print(classification_report(y_test, y_test_pred))
+
+
+# %%
